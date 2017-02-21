@@ -62,9 +62,39 @@ You should format the `selector` property this way:
 ```
 
 This makes selectors more convenient to write declaratively, while still
-maintaining the ability to express selectors with full fidelity. For more
-documentation on pouchdb-find selectors, please check out the docs
+maintaining the ability to express selectors with full fidelity. Note that
+embedded strings in selectors (e.g. 'Mario' in the example above) are not
+always parsed correctly. In these cases it is better to express the selector
+as an object or JSON string, as shown in the example below
+
+For more documentation on pouchdb-find selectors, please check out the docs
 [here](https://github.com/nolanlawson/pouchdb-find#dbfindrequest--callback).
+
+You can also express selectors as objects or JSON strings, which must
+conform to the semantics described in the pouchdb-find documentation. JSON
+strings can be used as selector attribute values. Javascript objects can be
+defined as component properties and passed as a value to the selector.
+
+Example of object used as a selector:
+
+```html
+<app-pouchdb-query
+    db-name="cats"
+    selector="{{mySelector}}
+    ...
+</app-pouchdb-query>
+```
+
+```javascript
+Polymer({
+  ...
+  properties: {
+    mySelector: {
+      type: Object,
+      value: { $and: [ { _id: { $gte: "rec1" } }, { _id: { $lt: "rec3" } } ] }
+    },
+    ...
+```
 -->
 <script>
   (function() {
@@ -202,6 +232,12 @@ documentation on pouchdb-find selectors, please check out the docs
       },
 
       __computeParsedSelector: function(selector) {
+        if ((typeof selector) !== "string")
+          return selector;
+        try {
+          return JSON.parse(selector);
+        } catch(e) {}
+
         var dimensions = selector.split(/\s*[,]\s*/);
         var parsedSelector = {};
 
